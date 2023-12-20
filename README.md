@@ -3,7 +3,8 @@
 Be an angel & link me to the heaven.
 
 <p align="center">
-<img src="./asset/profile.jpg" border="10" alt="profile" style="zoom:13%;" />
+<img src="./asset/profile.jpg" border="10" width=284 height=525 alt="profile" style="zoom:13%;" />
+
 
 </p>
 
