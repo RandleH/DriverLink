@@ -2,29 +2,30 @@
 
 import sys
 from drive import MyDrive
-
+import argparse
 
 
 def usage():
     print("USAGE:")
-    print("> python upload.py <local file path> <google drive path>")
-    print("> python upload.py <local file path> <google drive path> [-a include hidden files]")
+    print("> python upload.py --local <local file path> --drive <google drive path> [-jpg] [--rename_folder <name>] [-a]")
     print("\n\n")
     exit(1)
 
+parser = argparse.ArgumentParser()
+parser.add_argument("-jpg", "--jpg_only", action='store_const', default=False, const=True)
+parser.add_argument("-a", "--all", action='store_const', default=False, const=True)
+parser.add_argument("--local", type=str, help="Your local directory", default="")
+parser.add_argument("--drive", type=str, help="Your Google Drive directory", default="")
+parser.add_argument("--rename_folder", type=str, help="The destination folder name on Google Drive", default="")
+(params, unknown_args) = parser.parse_known_args()
+
 
 def main():
-    if(len(sys.argv)<3):
+    if not params.local or not params.drive:
         usage()
 
-    FLAG__ignore_hidden_file = True
-
-    if "-a" in sys.argv:
-        FLAG__ignore_hidden_file = False
-        sys.argv.remove("-a")
-
-    drv = MyDrive()
-    drv.upload( sys.argv[1], sys.argv[2], FLAG__ignore_hidden_file)
+    drv = MyDrive(params)
+    drv.upload()
 
 
 

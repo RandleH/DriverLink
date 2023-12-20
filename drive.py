@@ -8,6 +8,7 @@ from googleapiclient.errors import HttpError
 import shutil
 import os
 import httplib2
+import argparse
 
 
 NO_ERROR   = 0
@@ -18,10 +19,12 @@ ERR_SKIP   = 3
 
 # https://console.developers.google.com/apis/credentials
 
+
 class MyDrive:
     global NO_ERROR,ERR_SOLVED,ERR_FATAL,ERR_SKIP
 
-    def __init__(self, offline=False) -> None:
+    def __init__(self, params, offline=False) -> None:
+        self.user_params = params
         self.logger = print
         self.cache_id = dict()
         self.offline = offline
@@ -98,19 +101,16 @@ class MyDrive:
         self._string_verdict(f_drv_path_name)
         self._string_expand(f_drv_path_name)
         return self.path_id(f_drv_path_name)!=None
-
-    def upload( self, f_local_path:str, f_drv_path:str, ignore_hidden_file=True):
-
-        errorCode    = NO_ERROR
-
-        f_local_path = os.path.expanduser(f_local_path)
-        f_drv_path   = self._string_expand(f_drv_path)
-
+    
+    def __upload__(self, f_local_path, f_drv_path):
+        errorCode = NO_ERROR
         try:
             self.create_folder(f_drv_path)
             
             if( True==os.path.isfile(f_local_path) ):
-                if(ignore_hidden_file==True and True==os.path.basename(f_local_path).startswith('.')):
+                if(self.user_params.all!=True and True==os.path.basename(f_local_path).startswith('.')):
+                    return
+                elif self.user_params.jpg_only==True and not (f_local_path.endswith(".jpg") or f_local_path.endswith(".JPG") or f_local_path.endswith(".JPEG") or f_local_path.endswith(".jpeg")):
                     return
 
                 self.logger( f"Uploading from {f_local_path} to {f_drv_path}")
@@ -130,7 +130,7 @@ class MyDrive:
                 f_drv_path_next   = os.path.join(f_drv_path, os.path.basename(f_local_path))
                 for item in os.listdir(f_local_path):
                     f_local_path_next = os.path.join(f_local_path, item)
-                    self.upload( f_local_path_next, f_drv_path_next)
+                    self.__upload__( f_local_path_next, f_drv_path_next)
 
         except TimeoutError:
             print("[ERROR]:Timeout!")
@@ -143,8 +143,8 @@ class MyDrive:
                 errorCode = ERR_FATAL
 
         # except httplib2.error.RedirectMissingLocation:
-        except:
-            print("[ERROR]:Upload failed!")
+        except Exception as e:
+            print("[ERROR]:Upload failed! [Reason]={}".format(e))
             ans = input("Retry? [Y/N] ")
             if(ans=="Y" or ans=="y"):
                 errorCode = ERR_SOLVED
@@ -153,12 +153,24 @@ class MyDrive:
             
         finally:
             if(errorCode==ERR_SOLVED):
-                self.upload(f_local_path, f_drv_path)
+                self.__upload__(f_local_path, f_drv_path)
             elif(errorCode==ERR_SKIP):
                 return
             elif(errorCode==ERR_FATAL):
                 exit(9)
-                    
+
+
+    def upload( self):
+        f_local_path = os.path.expanduser(self.user_params.local)
+        if self.user_params.rename_folder:
+            f_drv_path   = os.path.join( self._string_expand(self.user_params.drive), self.user_params.rename_folder)
+            for item in os.listdir(f_local_path):
+                f_local_path_next = os.path.join(f_local_path, item)
+                self.__upload__( f_local_path_next, f_drv_path)
+        else:
+            f_drv_path   = self._string_expand(self.user_params.drive)
+            self.__upload__(f_local_path, f_drv_path)
+
 
     def path_id(self, f_drv_path:str):
         
