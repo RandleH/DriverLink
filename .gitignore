@@ -1,0 +1,8 @@
+# Ignored File
+.DS_Store
+
+client_secrets_RandleH.json
+client_secrets_YuanJiQiu.json
+client_secrets.json
+
+__pycache__/

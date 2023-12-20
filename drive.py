@@ -242,16 +242,6 @@ class MyDrive:
                 exit(9)
             
 
-
-        
-        
-        
-
-
-
-
-
-
 def main():
     drv = MyDrive()
     drv.test()
